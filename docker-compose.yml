@@ -1,0 +1,51 @@
+version: '3.0'
+
+services:
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 6379:6379
+    networks:
+      - mynetwork
+    restart: always
+  main:
+    container_name: main
+    build:
+      context: .
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - mynetwork
+    ports:
+      - 5000:5000
+      - 9229:9229
+    command: npm run start:dev
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+  postgres:
+    container_name: postgres
+    image: postgres:14.9
+    env_file:
+      - .env
+    networks:
+      - mynetwork
+    environment:
+      PG_DATA: /var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+networks:
+  mynetwork:
+    driver: bridge
+
+volumes:
+  pgdata:
